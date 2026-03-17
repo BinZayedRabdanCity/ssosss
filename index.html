@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoS</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:#ff0d0d;--red-dim:#6b0000;--bg:#000;--surface:rgba(14,14,14,0.95);--border:#2a0000;--text:#eee;--muted:#777}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,0,0,0.018) 2px,rgba(255,0,0,0.018) 4px);pointer-events:none;z-index:9999}
+#particles{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.particle{position:absolute;width:2px;height:2px;background:#ff0d0d;border-radius:50%;animation:drift linear infinite;opacity:0}
+@keyframes drift{0%{transform:translateY(100vh);opacity:0}10%{opacity:.6}90%{opacity:.3}100%{transform:translateY(-10vh) translateX(40px);opacity:0}}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:60px;background:rgba(0,0,0,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(10px)}
+.nav-logo{font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--red);letter-spacing:4px}
+.nav-links{display:flex;gap:2px;list-style:none;align-items:center;flex-wrap:wrap}
+.nav-links li a,.nav-links li button{font-family:'Rajdhani',sans-serif;font-weight:500;font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:6px 10px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;text-decoration:none;transition:all .2s}
+.nav-links li a:hover,.nav-links li button:hover,.nav-links li button.active{color:var(--red);border-color:var(--red-dim)}
+.discord-btn{padding:6px 10px;border:1px solid #3a3a8a;background:transparent;color:#7289da;font-family:'Rajdhani',sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;text-decoration:none;display:flex;align-items:center;transition:all .2s}
+.discord-btn:hover{background:rgba(114,137,218,.12);color:#fff}
+.page{display:none;min-height:100vh;padding-top:60px;position:relative;z-index:1}
+.page.active{display:block}
+#home{display:none;flex-direction:column;align-items:center}
+#home.active{display:flex}
+.hero{display:flex;flex-direction:column;align-items:center;padding:80px 20px 60px;text-align:center;width:100%}
+.sos-title{font-family:'Share Tech Mono',monospace;font-size:clamp(60px,14vw,160px);font-weight:400;line-height:1;color:transparent;letter-spacing:16px;-webkit-text-stroke:2px var(--red);text-shadow:4px 0 0 var(--red-dim),0 0 40px rgba(255,13,13,.4);animation:flicker 5s infinite}
+@keyframes flicker{0%,95%,100%{opacity:1}96%{opacity:.7}97%{opacity:1}98%{opacity:.5}99%{opacity:1}}
+.sos-wrapper{position:relative;display:inline-block;margin-bottom:32px}
+.sos-grid-overlay{position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.4) 1px,transparent 1px);background-size:16px 16px;pointer-events:none}
+.hero-sub{font-size:15px;letter-spacing:6px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.divider{width:120px;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent);margin:0 auto 50px}
+.section-title{text-align:center;font-size:12px;letter-spacing:6px;text-transform:uppercase;color:var(--red);margin-bottom:40px}
+.founders-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:24px;padding:0 40px 80px;max-width:1200px;margin:0 auto}
+.card{background:var(--surface);border:1px solid var(--border);width:220px;padding:28px 20px 24px;text-align:center;position:relative;overflow:hidden;transition:border-color .3s,transform .3s}
+.card::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:1px;background:var(--red);transition:left .4s}
+.card:hover::before{left:100%}
+.card:hover{border-color:var(--red-dim);transform:translateY(-6px);box-shadow:0 16px 40px rgba(107,0,0,.4)}
+.card::after{content:'';position:absolute;bottom:0;right:0;width:16px;height:16px;border-bottom:1px solid var(--red);border-right:1px solid var(--red);opacity:0;transition:opacity .3s}
+.card:hover::after{opacity:1}
+.card-corner{position:absolute;top:0;left:0;width:16px;height:16px;border-top:1px solid var(--red);border-left:1px solid var(--red);opacity:0;transition:opacity .3s}
+.card:hover .card-corner{opacity:1}
+.avatar{width:80px;height:80px;border-radius:50%;border:2px solid var(--red-dim);object-fit:cover;margin-bottom:14px;filter:grayscale(30%);transition:filter .3s,border-color .3s}
+.card:hover .avatar{filter:grayscale(0%);border-color:var(--red)}
+.card-name{font-size:18px;font-weight:700;letter-spacing:2px;color:#fff;margin-bottom:4px;text-transform:uppercase}
+.card-role{font-size:11px;letter-spacing:4px;color:var(--red);text-transform:uppercase;margin-bottom:12px}
+.card-desc{font-size:13px;color:var(--muted);line-height:1.5;font-weight:300}
+.card-id{position:absolute;top:10px;right:12px;font-family:'Share Tech Mono',monospace;font-size:9px;color:#2a0000}
+#plans,#cfx,#iplookup,#wifiscan{display:none;flex-direction:column;align-items:center;padding-top:60px}
+#plans.active,#cfx.active,#iplookup.active,#wifiscan.active{display:flex}
+.tool-hero{text-align:center;padding:50px 20px 30px}
+.tool-title{font-family:'Share Tech Mono',monospace;font-size:clamp(20px,5vw,42px);letter-spacing:8px;color:var(--red);text-transform:uppercase;margin-bottom:8px}
+.tool-sub{font-size:11px;letter-spacing:4px;color:var(--muted);text-transform:uppercase}
+.tool-wrap{width:100%;max-width:740px;padding:0 20px 80px}
+.search-box{background:var(--surface);border:1px solid var(--border);padding:24px;margin-bottom:16px}
+.input-row{display:flex;gap:10px;flex-wrap:wrap}
+.tool-input{flex:1;min-width:180px;padding:11px 14px;border:1px solid var(--border);background:#000;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;outline:none;transition:border-color .2s}
+.tool-input::placeholder{color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:13px}
+.tool-input:focus{border-color:var(--red-dim)}
+.tool-btn{padding:11px 22px;background:transparent;border:1px solid var(--red-dim);color:var(--red);font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .2s;white-space:nowrap}
+.tool-btn:hover:not(:disabled){background:var(--red);color:#000;box-shadow:0 0 16px rgba(255,13,13,.4)}
+.tool-btn:disabled{opacity:.5;cursor:not-allowed}
+.hint{margin-top:10px;font-size:10px;letter-spacing:2px;color:#2a2a2a;text-transform:uppercase}
+.api-status{font-size:10px;letter-spacing:2px;color:#1a1a1a;text-transform:uppercase;margin-top:8px}
+.result-box{background:var(--surface);border:1px solid var(--border);overflow:hidden;display:none}
+.result-box.visible{display:block}
+.result-box.err{border-color:var(--red-dim)}
+.result-body{padding:20px}
+.err-msg{color:var(--red);font-size:13px;padding:20px;letter-spacing:2px;font-family:'Share Tech Mono',monospace}
+.loading-txt{text-align:center;padding:28px;color:var(--muted);font-size:12px;letter-spacing:3px;text-transform:uppercase}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-left:8px}
+.ip-header{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.ip-flag{font-size:32px}
+.ip-main{flex:1}
+.ip-address{font-family:'Share Tech Mono',monospace;font-size:20px;color:var(--red);letter-spacing:2px}
+.ip-location{font-size:13px;color:var(--muted);margin-top:3px}
+.ip-type-badge{padding:3px 8px;border:1px solid var(--red-dim);color:var(--red);font-size:9px;letter-spacing:3px;text-transform:uppercase;font-family:'Share Tech Mono',monospace}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:18px}
+.info-cell{background:#000;padding:12px 14px}
+.info-cell .lbl{font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:5px}
+.info-cell .val{font-size:13px;color:var(--text);font-family:'Share Tech Mono',monospace;word-break:break-all}
+.info-cell .val.good{color:#22c55e}.info-cell .val.warn{color:#f59e0b}.info-cell .val.bad{color:var(--red)}
+.map-wrap{border:1px solid var(--border);margin-bottom:16px;overflow:hidden}
+.map-wrap iframe{width:100%;height:200px;border:none;display:block;filter:invert(.85) hue-rotate(180deg) saturate(.8)}
+.map-lbl{padding:8px 14px;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;background:#000;border-top:1px solid var(--border)}
+.flags-wrap{padding:14px;background:#080000;border:1px solid var(--red-dim)}
+.flags-title{font-size:9px;letter-spacing:3px;color:var(--red);text-transform:uppercase;margin-bottom:10px}
+.flags-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(42,0,0,.4);font-size:12px}
+.flags-row:last-child{border-bottom:none}
+.flags-key{color:var(--muted);letter-spacing:1px}
+.flags-val{font-family:'Share Tech Mono',monospace}
+.wifi-controls{background:var(--surface);border:1px solid var(--border);padding:24px;margin-bottom:16px}
+.wifi-ip-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.wifi-ip-input{flex:1;min-width:180px;padding:10px 14px;border:1px solid var(--border);background:#000;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;outline:none;transition:border-color .2s}
+.wifi-ip-input::placeholder{color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:13px}
+.wifi-ip-input:focus{border-color:var(--red-dim)}
+.wifi-btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.wifi-hint{font-size:10px;letter-spacing:2px;color:#2a2a2a;text-transform:uppercase;text-align:center;margin-top:10px}
+#wifi-dashboard{display:none}
+.wifi-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:500px){.wifi-grid{grid-template-columns:1fr}}
+.wifi-card{background:#000;border:1px solid var(--border);padding:18px}
+.wc-lbl{font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:12px}
+.bars-wrap{display:flex;align-items:flex-end;gap:5px;height:56px;justify-content:center;margin-bottom:10px}
+.bar{width:13px;border-radius:2px 2px 0 0;transition:height .4s,background .4s}
+.sig-num{font-family:'Share Tech Mono',monospace;font-size:26px;font-weight:700;text-align:center;transition:color .4s}
+.sig-lbl{font-size:10px;letter-spacing:3px;text-transform:uppercase;text-align:center;color:var(--muted)}
+.speed-col{text-align:center}
+.speed-title{font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+.speed-num{font-family:'Share Tech Mono',monospace;font-size:28px;color:var(--red)}
+.speed-unit{font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.metric-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(42,0,0,.4);font-size:12px}
+.metric-row:last-child{border-bottom:none}
+.metric-key{color:var(--muted);letter-spacing:1px}
+.metric-val{font-family:'Share Tech Mono',monospace;font-size:13px}
+.metric-val.good{color:#22c55e}.metric-val.warn{color:#f59e0b}.metric-val.bad{color:var(--red)}
+.wifi-ip-result{background:#000;border:1px solid var(--border);padding:16px;margin-bottom:14px}
+.wifi-ip-title{font-size:9px;letter-spacing:3px;color:var(--red);text-transform:uppercase;margin-bottom:12px}
+.wifi-ip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1px;background:var(--border)}
+.wifi-ip-cell{background:#000;padding:10px 12px}
+.wifi-ip-cell .lbl{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px}
+.wifi-ip-cell .val{font-size:12px;color:var(--text);font-family:'Share Tech Mono',monospace;word-break:break-all}
+.chart-card{background:#000;border:1px solid var(--border);padding:16px;margin-bottom:14px}
+.chart-lbl{font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:10px}
+#sig-chart{width:100%;height:90px;display:block}
+.alert-box{padding:14px 16px;margin-bottom:14px;border:1px solid;display:none}
+.alert-box.visible{display:block}
+.alert-box.good{border-color:#22c55e;background:rgba(34,197,94,.05)}
+.alert-box.warn{border-color:#f59e0b;background:rgba(245,158,11,.05)}
+.alert-box.bad{border-color:var(--red);background:rgba(255,13,13,.06)}
+.alert-icon{font-size:18px;margin-bottom:4px;display:block}
+.alert-title{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+.alert-desc{font-size:12px;color:var(--muted);letter-spacing:1px;line-height:1.6}
+.plans-hero{text-align:center;padding:50px 20px 40px}
+.plans-title{font-family:'Share Tech Mono',monospace;font-size:clamp(26px,6vw,52px);letter-spacing:8px;color:var(--red);text-transform:uppercase;margin-bottom:8px}
+.plans-sub{font-size:11px;letter-spacing:4px;color:var(--muted);text-transform:uppercase}
+.products-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;padding:0 30px 80px;max-width:1100px;width:100%}
+.product-card{background:var(--surface);border:1px solid var(--border);padding:24px;position:relative;overflow:hidden;transition:border-color .3s,transform .2s}
+.product-card:hover{border-color:var(--red-dim);transform:translateY(-3px)}
+.product-card.featured{border-color:var(--red)}
+.product-card.featured::before{content:'POPULAR';position:absolute;top:12px;right:-20px;background:var(--red);color:#000;font-size:9px;font-weight:700;letter-spacing:2px;padding:3px 26px;transform:rotate(45deg)}
+.product-badge{display:inline-block;font-size:9px;letter-spacing:3px;text-transform:uppercase;padding:3px 8px;border:1px solid var(--red-dim);color:var(--red);margin-bottom:12px;font-family:'Share Tech Mono',monospace}
+.product-name{font-size:20px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;color:#fff}
+.product-price{font-family:'Share Tech Mono',monospace;font-size:28px;color:var(--red);margin:12px 0}
+.product-price span{font-size:13px;color:var(--muted)}
+.product-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px}
+.product-features{list-style:none;margin-bottom:20px}
+.product-features li{font-size:12px;color:#aaa;padding:4px 0;border-bottom:1px solid rgba(42,0,0,.5);display:flex;align-items:center;gap:8px}
+.product-features li::before{content:'›';color:var(--red);font-size:14px}
+.btn{display:block;width:100%;padding:10px;background:transparent;border:1px solid var(--red-dim);color:var(--red);font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:4px;text-transform:uppercase;cursor:pointer;transition:all .2s;text-decoration:none;text-align:center}
+.btn:hover{background:var(--red);color:#000}
+.product-card.featured .btn{background:var(--red);color:#000;border-color:var(--red)}
+.product-card.featured .btn:hover{background:transparent;color:var(--red)}
+.cfx-input{flex:1;min-width:180px;padding:11px 14px;border:1px solid var(--border);background:#000;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.cfx-input::placeholder{color:var(--muted)}
+.cfx-input:focus{border-color:var(--red-dim)}
+.srv-name{font-size:20px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff;margin-bottom:10px}
+.srv-meta{display:flex;flex-wrap:wrap;gap:8px 14px;margin-bottom:12px;font-size:12px;color:var(--muted)}
+.players-badge{display:inline-flex;align-items:center;padding:3px 10px;background:rgba(0,200,80,.1);color:#22c55e;font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:700;border:1px solid rgba(34,197,94,.2)}
+.cfx-info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px 14px;margin-bottom:14px;padding:14px;background:#000;border:1px solid var(--border)}
+.cfx-info-grid .lbl{font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:3px}
+.cfx-info-grid .val{font-size:13px;color:var(--text);font-weight:500}
+.cfx-info-grid .val a{color:var(--red);text-decoration:none}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.tag{font-size:10px;letter-spacing:2px;padding:2px 7px;border:1px solid var(--border);color:var(--muted);text-transform:uppercase}
+.connect-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding-top:12px;border-top:1px solid var(--border)}
+.cfx-link{font-size:11px;color:var(--red);word-break:break-all;flex:1}
+.cfx-link a{color:var(--red);text-decoration:none}
+.copy-btn{padding:5px 12px;font-size:10px;letter-spacing:2px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Rajdhani',sans-serif;cursor:pointer;text-transform:uppercase;transition:all .2s}
+.copy-btn:hover{border-color:var(--red-dim);color:var(--red)}
+.result-banner{width:100%;max-height:150px;object-fit:cover}
+footer{text-align:center;padding:18px;font-size:10px;letter-spacing:3px;color:#2a0000;text-transform:uppercase;position:relative;z-index:1;border-top:1px solid #0d0000;width:100%}
+.fade-in{opacity:0;transform:translateY(18px);animation:fadeUp .5s forwards}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+.d1{animation-delay:.1s}.d2{animation-delay:.2s}.d3{animation-delay:.3s}.d4{animation-delay:.4s}
+</style>
+</head>
+<body>
+<div id="particles"></div>
+<nav>
+  <div class="nav-logo">SoS</div>
+  <ul class="nav-links">
+    <li><button class="active" onclick="showPage('home',this)">Home</button></li>
+    <li><button onclick="showPage('cfx',this)">CFX</button></li>
+    <li><button onclick="showPage('iplookup',this)">IP Lookup</button></li>
+    <li><button onclick="showPage('wifiscan',this)">WiFi Scan</button></li>
+    <li><button onclick="showPage('plans',this)">Plans</button></li>
+    <li><a href="https://discord.gg/YOUR_INVITE" target="_blank" class="discord-btn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="margin-right:5px"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.032.055a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>Discord
+    </a></li>
+  </ul>
+</nav>
+
+<!-- HOME -->
+<div id="home" class="page active">
+  <section class="hero fade-in">
+    <p class="hero-sub">[ System of Systems ]</p>
+    <div class="sos-wrapper"><div class="sos-grid-overlay"></div><h1 class="sos-title">SoS</h1></div>
+  </section>
+  <div class="divider"></div>
+  <p class="section-title fade-in d1">[ Founders ]</p>
+  <div class="founders-grid">
+    <div class="card fade-in d1"><div class="card-corner"></div><span class="card-id">#001</span><img class="avatar" src="https://www.raed.net/img?id=1524497" alt="HorrorLog"><div class="card-name">HorrorLog .</div><div class="card-role">segfaultghost</div><div class="card-desc">I am the HorrorLog of nightmares. Once seen, never erased.</div></div>
+    <div class="card fade-in d2"><div class="card-corner"></div><span class="card-id">#002</span><img class="avatar" src="https://www.raed.net/img?id=1524498" alt="Azrael"><div class="card-name">Azrael</div><div class="card-role">azraelllll.</div><div class="card-desc">I am the Azrael of nightmares. Once I appear… sleep will never feel safe again.</div></div>
+  </div>
+  <footer>© 2020 · 2026 SoS · All Rights Reserved</footer>
+</div>
+
+<!-- CFX -->
+<div id="cfx" class="page">
+  <div class="tool-hero fade-in"><div class="tool-title">CFX Finder</div><p class="tool-sub">[ Search any FiveM server ]</p></div>
+  <div class="divider"></div>
+  <div class="tool-wrap">
+    <div class="search-box fade-in d1"><div class="input-row"><input class="cfx-input" id="cfx-input" type="text" placeholder="e.g. 5dg4mr or cfx.re/join/5dg4mr" autocomplete="off"><button class="tool-btn" id="cfx-btn">Search</button></div><p class="hint">[ Server code or cfx.re/join/ link ]</p></div>
+    <div class="result-box" id="cfx-result"><div id="cfx-content"></div></div>
+  </div>
+  <footer>© 2020 · 2026 SoS · All Rights Reserved</footer>
+</div>
+
+<!-- IP LOOKUP -->
+<div id="iplookup" class="page">
+  <div class="tool-hero fade-in"><div class="tool-title">IP Lookup</div><p class="tool-sub">[ Full network intelligence report ]</p></div>
+  <div class="divider"></div>
+  <div class="tool-wrap">
+    <div class="search-box fade-in d1">
+      <div class="input-row"><input class="tool-input" id="ip-input" type="text" placeholder="Enter IP (e.g. 8.8.8.8) — blank = your IP" autocomplete="off"><button class="tool-btn" id="ip-btn">Lookup</button></div>
+      <p class="hint">[ IPv4 &amp; IPv6 supported ]</p>
+      <p class="api-status" id="api-status"></p>
+    </div>
+    <div class="result-box" id="ip-result"><div id="ip-content"></div></div>
+  </div>
+  <footer>© 2020 · 2026 SoS · All Rights Reserved</footer>
+</div>
+
+<!-- WIFI SCAN -->
+<div id="wifiscan" class="page">
+  <div class="tool-hero fade-in"><div class="tool-title">WiFi Scan</div><p class="tool-sub">[ Real-time connection monitor ]</p></div>
+  <div class="divider"></div>
+  <div class="tool-wrap">
+    <div class="wifi-controls fade-in d1">
+      <div class="wifi-ip-row">
+        <input class="wifi-ip-input" id="wifi-ip-input" type="text" placeholder="IP to monitor (blank = your IP)" autocomplete="off">
+        <button class="tool-btn" id="wifi-lookup-btn">Fetch IP Info</button>
+      </div>
+      <div class="wifi-btn-row">
+        <button class="tool-btn" id="wifi-start-btn">&#9654; Start Scan</button>
+        <button class="tool-btn" id="wifi-stop-btn" disabled>&#9632; Stop</button>
+      </div>
+      <p class="wifi-hint" id="wifi-hint">[ Enter an IP (optional) then Start Scan ]</p>
+    </div>
+    <div id="wifi-ip-info" style="display:none" class="wifi-ip-result">
+      <div class="wifi-ip-title">[ IP Information ]</div>
+      <div class="wifi-ip-grid" id="wifi-ip-grid"></div>
+    </div>
+    <div id="wifi-dashboard">
+      <div class="alert-box" id="wifi-alert">
+        <span class="alert-icon" id="al-icon"></span>
+        <div class="alert-title" id="al-title"></div>
+        <div class="alert-desc" id="al-desc"></div>
+      </div>
+      <div class="wifi-grid">
+        <div class="wifi-card">
+          <span class="wc-lbl">[ Signal Strength ]</span>
+          <div class="bars-wrap"><div class="bar" id="b1"></div><div class="bar" id="b2"></div><div class="bar" id="b3"></div><div class="bar" id="b4"></div><div class="bar" id="b5"></div></div>
+          <div class="sig-num" id="sig-num">—</div>
+          <div class="sig-lbl" id="sig-lbl">Press Start</div>
+        </div>
+        <div class="wifi-card">
+          <span class="wc-lbl">[ Speed ]</span>
+          <div style="display:flex;flex-direction:column;gap:14px;align-items:center">
+            <div class="speed-col"><div class="speed-title">Download</div><div class="speed-num" id="dl-spd">—</div><div class="speed-unit">Mbps</div></div>
+            <div class="speed-col"><div class="speed-title">Upload</div><div class="speed-num" id="ul-spd" style="font-size:20px">—</div><div class="speed-unit">Mbps</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="wifi-card" style="margin-bottom:14px">
+        <span class="wc-lbl">[ Network Metrics ]</span>
+        <div class="metric-row"><span class="metric-key">Ping</span><span class="metric-val" id="m-ping">—</span></div>
+        <div class="metric-row"><span class="metric-key">Jitter</span><span class="metric-val" id="m-jitter">—</span></div>
+        <div class="metric-row"><span class="metric-key">Packet Loss</span><span class="metric-val" id="m-loss">—</span></div>
+        <div class="metric-row"><span class="metric-key">Connection Type</span><span class="metric-val" id="m-type">—</span></div>
+        <div class="metric-row"><span class="metric-key">Effective Type</span><span class="metric-val" id="m-eff">—</span></div>
+      </div>
+      <div class="chart-card">
+        <span class="chart-lbl">[ Ping History — Last 40 readings ]</span>
+        <canvas id="sig-chart"></canvas>
+      </div>
+    </div>
+  </div>
+  <footer>© 2020 · 2026 SoS · All Rights Reserved</footer>
+</div>
+
+<!-- PLANS -->
+<div id="plans" class="page">
+  <div class="plans-hero fade-in"><div class="plans-title">Plans &amp; Products</div><p class="plans-sub">[ Choose your access level ]</p></div>
+  <div class="divider"></div>
+  <div class="products-grid">
+    <div class="product-card fade-in d1"><div class="product-badge">Tier 01</div><div class="product-name">Basic</div><div class="product-price">Free <span>/ forever</span></div><div class="product-desc">Get started.</div><ul class="product-features"><li>Basic tools access</li><li>Community entry</li><li>Announcements</li></ul><a href="#" class="btn">Get Started</a></div>
+    <div class="product-card featured fade-in d2"><div class="product-badge">Tier 02</div><div class="product-name">Pro Pack</div><div class="product-price">$9.99 <span>/ month</span></div><div class="product-desc">Premium tools.</div><ul class="product-features"><li>All Basic features</li><li>Premium scripts</li><li>Priority support</li><li>Early access</li></ul><a href="#" class="btn">Get Pro</a></div>
+    <div class="product-card fade-in d3"><div class="product-badge">Tier 03</div><div class="product-name">Elite Pack</div><div class="product-price">$24.99 <span>/ month</span></div><div class="product-desc">Full access.</div><ul class="product-features"><li>All Pro features</li><li>Private tools</li><li>Founder access</li><li>Custom requests</li><li>VIP role</li></ul><a href="#" class="btn">Get Elite</a></div>
+    <div class="product-card fade-in d4"><div class="product-badge">Tier 04</div><div class="product-name">Lifetime</div><div class="product-price">$99 <span>/ once</span></div><div class="product-desc">Pay once forever.</div><ul class="product-features"><li>All Elite features</li><li>Lifetime updates</li><li>No fees</li><li>Founder badge</li></ul><a href="#" class="btn">Go Lifetime</a></div>
+  </div>
+  <footer>© 2020 · 2026 SoS · All Rights Reserved</footer>
+</div>
+
+<script>
+(function(){
+  var pc=document.getElementById('particles');
+  for(var i=0;i<60;i++){var p=document.createElement('div');p.className='particle';p.style.left=Math.random()*100+'%';p.style.animationDuration=(8+Math.random()*14)+'s';p.style.animationDelay=(Math.random()*12)+'s';pc.appendChild(p);}
+
+  window.showPage=function(id,btn){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-links button').forEach(b=>b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+    document.querySelectorAll('#'+id+' .fade-in').forEach(el=>{el.style.animation='none';el.offsetHeight;el.style.animation='';});
+  };
+
+  function esc(s){if(s===null||s===undefined)return'—';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
+
+  // ── CFX ──
+  (function(){
+    var inp=document.getElementById('cfx-input'),btn=document.getElementById('cfx-btn'),out=document.getElementById('cfx-result'),content=document.getElementById('cfx-content');
+    function strip(s){return s?s.replace(/\^[0-9]/g,'').trim():'';}
+    function setLoading(on){btn.disabled=on;if(on){content.innerHTML='<div class="loading-txt">Scanning<span class="spin"></span></div>';out.classList.add('visible');out.classList.remove('err');}}
+    function setErr(msg){content.innerHTML='<div class="err-msg">[ ERROR ] '+esc(msg)+'</div>';out.classList.add('visible','err');}
+    var lN={'en-US':'English (US)','en-GB':'English (UK)','ar-SA':'Arabic','de-DE':'Deutsch','fr-FR':'Français','tr-TR':'Türkçe','zh-CN':'中文','ja-JP':'日本語'};
+    var lTZ={'ar-SA':'Saudi Arabia (UTC+3)','en-US':'USA','en-GB':'UK (UTC+0)','de-DE':'Central European','tr-TR':'Turkey (UTC+3)','zh-CN':'China (UTC+8)','ja-JP':'Japan (UTC+9)'};
+    function extractCode(v){if(!v||!v.trim())return null;v=v.trim();var m=v.match(/cfx\.re\/join\/([a-zA-Z0-9]+)/i);if(m)return m[1];if(/^[a-zA-Z0-9]+$/.test(v))return v;return null;}
+    function render(data){
+      var d=data.Data||{},v=d.vars||{};
+      var name=strip(d.hostname||v.sv_projectName||'No name');
+      var clients=d.clients!=null?d.clients:0,max=d.sv_maxclients!=null?d.sv_maxclients:0;
+      var banner=v.banner_detail||v.banner_connecting||'',code=data.EndPoint||'',url='https://cfx.re/join/'+code;
+      var eps=data.ConnectEndPoints||data.connectEndPoints||[];
+      var sip='';if(Array.isArray(eps)&&eps[0])sip=typeof eps[0]==='string'?eps[0]:(eps[0].Host||'')+(eps[0].Port?':'+eps[0].Port:'');
+      var locale=v.locale||'',ll=lN[locale]||locale||'—',tz=lTZ[locale]||'—';
+      var tags=(v.tags||'').split(',').map(t=>t.trim()).filter(Boolean);
+      var rc=Array.isArray(d.resources)?d.resources.length:0;
+      var h='';if(banner)h+='<img class="result-banner" src="'+esc(banner)+'" alt="">';
+      h+='<div class="result-body"><h2 class="srv-name">'+esc(name)+'</h2><div class="srv-meta"><span class="players-badge">'+clients+' / '+max+' players</span>';
+      if(d.gametype)h+='<span>'+esc(d.gametype)+'</span>';if(d.mapname)h+='<span>'+esc(d.mapname)+'</span>';
+      h+='</div><div class="cfx-info-grid"><div><span class="lbl">IP:Port</span><span class="val">'+(sip?esc(sip):'—')+'</span></div><div><span class="lbl">Timezone</span><span class="val">'+esc(tz)+'</span></div><div><span class="lbl">Language</span><span class="val">'+esc(ll)+'</span></div>';
+      if(d.server)h+='<div><span class="lbl">Version</span><span class="val">'+esc(d.server)+'</span></div>';
+      h+='<div><span class="lbl">OneSync</span><span class="val">'+(v.onesync_enabled==='true'?'Enabled':'—')+'</span></div>';
+      if(rc>0)h+='<div><span class="lbl">Resources</span><span class="val">'+rc+'</span></div>';
+      h+='</div>';if(tags.length){h+='<div class="tags">';tags.forEach(t=>{h+='<span class="tag">'+esc(t)+'</span>';});h+='</div>';}
+      h+='<div class="connect-row"><span class="cfx-link">Join: <a href="'+url+'" target="_blank">'+esc(url)+'</a></span><button class="copy-btn" data-copy="'+esc(url)+'">Copy</button>';
+      if(sip)h+='<button class="copy-btn" data-copy="'+esc(sip)+'">Copy IP</button>';h+='</div></div>';
+      content.innerHTML=h;out.classList.add('visible');out.classList.remove('err');
+      content.querySelectorAll('.copy-btn').forEach(el=>{el.addEventListener('click',function(){var t=this.getAttribute('data-copy');if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>{var o=el.textContent;el.textContent='Copied!';setTimeout(()=>el.textContent=o,1500);});});});
+    }
+    var proxies=[url=>'https://api.allorigins.win/raw?url='+encodeURIComponent(url),url=>'https://corsproxy.io/?'+encodeURIComponent(url)];
+    function fetchServer(code){var url='https://servers-frontend.fivem.net/api/servers/single/'+encodeURIComponent(code);function attempt(i){var u=i<0?url:proxies[i](url);return fetch(u,{mode:'cors'}).then(r=>{if(!r.ok)throw new Error(r.status===404?'Not found':'HTTP '+r.status);return r.text();}).then(t=>{try{return JSON.parse(t);}catch(e){throw new Error('Invalid data');}}).catch(err=>{if(i<proxies.length-1)return attempt(i+1);throw err;});}return attempt(-1);}
+    btn.addEventListener('click',function(){var code=extractCode(inp.value);if(!code){setErr('Enter a valid code');out.classList.add('visible');return;}setLoading(true);fetchServer(code).then(json=>{setLoading(false);if(json&&json.Data)render(json);else setErr('Not found.');}).catch(err=>{setLoading(false);setErr(err.message);});});
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')btn.click();});
+  })();
+
+  // ── IP LOOKUP — 3 APIs بالتسلسل ──
+  var ipFlags={'US':'🇺🇸','GB':'🇬🇧','SA':'🇸🇦','AE':'🇦🇪','DE':'🇩🇪','FR':'🇫🇷','RU':'🇷🇺','CN':'🇨🇳','JP':'🇯🇵','BR':'🇧🇷','IN':'🇮🇳','CA':'🇨🇦','AU':'🇦🇺','NL':'🇳🇱','TR':'🇹🇷','KW':'🇰🇼','QA':'🇶🇦','BH':'🇧🇭','OM':'🇴🇲','EG':'🇪🇬','IQ':'🇮🇶','MA':'🇲🇦','DZ':'🇩🇿','LY':'🇱🇾','TN':'🇹🇳','JO':'🇯🇴','LB':'🇱🇧','SY':'🇸🇾','YE':'🇾🇪','PK':'🇵🇰','SG':'🇸🇬','KR':'🇰🇷','IT':'🇮🇹','ES':'🇪🇸','PL':'🇵🇱','UA':'🇺🇦','MX':'🇲🇽','ZA':'🇿🇦','NG':'🇳🇬','SE':'🇸🇪','NO':'🇳🇴','FI':'🇫🇮','CH':'🇨🇭'};
+  function getFlag(cc){return ipFlags[cc]||'🌐';}
+
+  function tryIpApiCom(ip,cb){
+    var target='http://ip-api.com/json/'+(ip||'')+'?fields=status,message,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,org,as,mobile,proxy,hosting,query';
+    fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(target)).then(r=>{if(!r.ok)throw new Error('x');return r.json();}).then(d=>{
+      if(d.status==='fail')throw new Error(d.message||'fail');
+      cb({ip:d.query,country:d.country,country_code:d.countryCode,region:d.regionName,city:d.city,postal:d.zip,latitude:d.lat,longitude:d.lon,timezone:d.timezone,isp:d.isp,org:d.org,asn:d.as,mobile:d.mobile||false,proxy:d.proxy||false,hosting:d.hosting||false,vpn:false,tor:false},'ip-api.com');
+    }).catch(()=>cb(null,null));
+  }
+  function tryIpWhoIs(ip,cb){
+    fetch('https://ipwho.is/'+(ip||'')).then(r=>r.json()).then(d=>{
+      if(d.success===false)throw new Error('fail');
+      var s=d.security||{};
+      cb({ip:d.ip,country:d.country,country_code:d.country_code,region:d.region,city:d.city,postal:d.postal,latitude:d.latitude,longitude:d.longitude,timezone:d.timezone&&d.timezone.id?d.timezone.id:'—',isp:d.connection&&d.connection.isp?d.connection.isp:'—',org:d.connection&&d.connection.org?d.connection.org:'—',asn:d.connection&&d.connection.asn?'AS'+d.connection.asn:'—',mobile:false,proxy:s.proxy||false,vpn:s.vpn||false,tor:s.tor||false,hosting:s.hosting||false},'ipwho.is');
+    }).catch(()=>cb(null,null));
+  }
+  function tryFreeIpApi(ip,cb){
+    fetch('https://freeipapi.com/api/json/'+(ip||'')).then(r=>r.json()).then(d=>{
+      cb({ip:d.ipAddress,country:d.countryName,country_code:d.countryCode,region:d.regionName,city:d.cityName,postal:d.zipCode,latitude:d.latitude,longitude:d.longitude,timezone:d.timeZone,isp:'—',org:'—',asn:'—',mobile:false,proxy:false,vpn:false,tor:false,hosting:false},'freeipapi.com');
+    }).catch(()=>cb(null,null));
+  }
+  function fetchIPInfo(ipVal,cb){
+    var v=ipVal?ipVal.trim():'';
+    tryIpApiCom(v,function(d,src){if(d){cb(d,src,null);return;}
+      tryIpWhoIs(v,function(d2,src2){if(d2){cb(d2,src2,null);return;}
+        tryFreeIpApi(v,function(d3,src3){
+          if(d3){cb(d3,src3,null);}else{cb(null,null,'All lookup services failed.');}
+        });
+      });
+    });
+  }
+
+  function renderIP(d,source){
+    var statusEl=document.getElementById('api-status');
+    if(statusEl)statusEl.textContent='[ Source: '+source+' ]';
+    var flag=getFlag(d.country_code||'');
+    var lat=parseFloat(d.latitude)||0,lon=parseFloat(d.longitude)||0;
+    var vpn=d.vpn||false,proxy=d.proxy||false,tor=d.tor||false,hosting=d.hosting||false;
+    var connType=tor?'TOR Exit Node':vpn?'VPN':proxy?'Proxy':hosting?'Datacenter':'Residential';
+    var connClass=tor||vpn?'bad':proxy||hosting?'warn':'good';
+    var mapUrl='https://www.openstreetmap.org/export/embed.html?bbox='+(lon-.08)+','+(lat-.08)+','+(lon+.08)+','+(lat+.08)+'&layer=mapnik&marker='+lat+','+lon;
+    var h='<div class="result-body"><div class="ip-header"><div class="ip-flag">'+flag+'</div><div class="ip-main"><div class="ip-address">'+esc(d.ip)+'</div><div class="ip-location">'+esc(d.city)+', '+esc(d.region)+', '+esc(d.country)+'</div></div><div class="ip-type-badge">'+esc(connType)+'</div></div>';
+    h+='<div class="info-grid"><div class="info-cell"><span class="lbl">IP Address</span><span class="val">'+esc(d.ip)+'</span></div><div class="info-cell"><span class="lbl">Country</span><span class="val">'+flag+' '+esc(d.country)+'</span></div><div class="info-cell"><span class="lbl">Region</span><span class="val">'+esc(d.region)+'</span></div><div class="info-cell"><span class="lbl">City</span><span class="val">'+esc(d.city)+'</span></div><div class="info-cell"><span class="lbl">Postal Code</span><span class="val">'+esc(d.postal)+'</span></div><div class="info-cell"><span class="lbl">Timezone</span><span class="val">'+esc(d.timezone)+'</span></div><div class="info-cell"><span class="lbl">ISP</span><span class="val">'+esc(d.isp)+'</span></div><div class="info-cell"><span class="lbl">Organization</span><span class="val">'+esc(d.org)+'</span></div><div class="info-cell"><span class="lbl">ASN</span><span class="val">'+esc(d.asn)+'</span></div><div class="info-cell"><span class="lbl">Coordinates</span><span class="val">'+lat+', '+lon+'</span></div><div class="info-cell"><span class="lbl">Type</span><span class="val '+connClass+'">'+esc(connType)+'</span></div><div class="info-cell"><span class="lbl">Mobile</span><span class="val '+(d.mobile?'warn':'good')+'">'+(d.mobile?'YES':'NO')+'</span></div></div>';
+    if(lat&&lon)h+='<div class="map-wrap"><iframe src="'+mapUrl+'" loading="lazy" title="Map"></iframe><div class="map-lbl">[ Approximate Location · '+lat+', '+lon+' ]</div></div>';
+    h+='<div class="flags-wrap"><div class="flags-title">[ Security Flags ]</div><div class="flags-row"><span class="flags-key">VPN</span><span class="flags-val '+(vpn?'bad':'good')+'">'+(vpn?'DETECTED':'CLEAN')+'</span></div><div class="flags-row"><span class="flags-key">Proxy</span><span class="flags-val '+(proxy?'bad':'good')+'">'+(proxy?'DETECTED':'CLEAN')+'</span></div><div class="flags-row"><span class="flags-key">TOR Exit Node</span><span class="flags-val '+(tor?'bad':'good')+'">'+(tor?'DETECTED':'CLEAN')+'</span></div><div class="flags-row"><span class="flags-key">Datacenter</span><span class="flags-val '+(hosting?'warn':'good')+'">'+(hosting?'YES':'NO')+'</span></div><div class="flags-row"><span class="flags-key">Mobile Network</span><span class="flags-val '+(d.mobile?'warn':'good')+'">'+(d.mobile?'YES':'NO')+'</span></div></div></div>';
+    return h;
+  }
+
+  (function(){
+    var inp=document.getElementById('ip-input'),btn=document.getElementById('ip-btn'),out=document.getElementById('ip-result'),content=document.getElementById('ip-content');
+    function setLoading(on){btn.disabled=on;if(on){content.innerHTML='<div class="loading-txt">Running analysis<span class="spin"></span></div>';out.className='result-box visible';}}
+    function setErr(msg){content.innerHTML='<div class="err-msg">[ ERROR ] '+esc(msg)+'</div>';out.className='result-box visible err';}
+    function doLookup(){
+      setLoading(true);
+      fetchIPInfo(inp.value,function(d,src,err){
+        setLoading(false);
+        if(err||!d){setErr(err||'Lookup failed');return;}
+        content.innerHTML=renderIP(d,src);
+        out.className='result-box visible';
+      });
+    }
+    btn.addEventListener('click',doLookup);
+    inp.addEventListener('keydown',function(e){if(e.key==='Enter')doLookup();});
+  })();
+
+  // ── WIFI SCAN ──
+  (function(){
+    var startBtn=document.getElementById('wifi-start-btn'),stopBtn=document.getElementById('wifi-stop-btn');
+    var lookupBtn=document.getElementById('wifi-lookup-btn'),ipInp=document.getElementById('wifi-ip-input');
+    var dashboard=document.getElementById('wifi-dashboard');
+    var ipInfoBox=document.getElementById('wifi-ip-info'),ipGrid=document.getElementById('wifi-ip-grid');
+    var hint=document.getElementById('wifi-hint');
+    var canvas=document.getElementById('sig-chart'),ctx=canvas.getContext('2d');
+    var scanInterval=null,pingHistory=[],chartHistory=[];
+    var conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection||null;
+
+    lookupBtn.addEventListener('click',function(){
+      var val=ipInp.value.trim();
+      lookupBtn.disabled=true;lookupBtn.textContent='...';
+      fetchIPInfo(val,function(d,src,err){
+        lookupBtn.disabled=false;lookupBtn.textContent='Fetch IP Info';
+        if(err||!d){ipInfoBox.style.display='none';return;}
+        var flag=getFlag(d.country_code||'');
+        var cells=[['IP',d.ip],['Country',flag+' '+d.country],['City',d.city+', '+d.region],['ISP',d.isp],['ASN',d.asn],['Timezone',d.timezone],['Coordinates',d.latitude+', '+d.longitude]];
+        ipGrid.innerHTML=cells.map(c=>'<div class="wifi-ip-cell"><span class="lbl">'+c[0]+'</span><span class="val">'+esc(c[1])+'</span></div>').join('');
+        ipInfoBox.style.display='block';
+      });
+    });
+
+    var pingTargets=['https://www.cloudflare.com/cdn-cgi/trace','https://dns.google/resolve?name=test.com','https://httpbin.org/get'];
+    var pingIdx=0;
+    function measurePing(cb){
+      var url=pingTargets[pingIdx%pingTargets.length]+'?_='+Date.now();pingIdx++;
+      var t0=performance.now();
+      fetch(url,{cache:'no-store',mode:'no-cors'}).then(()=>cb(Math.round(performance.now()-t0))).catch(()=>{
+        var url2=pingTargets[pingIdx%pingTargets.length]+'?_='+Date.now();
+        var t1=performance.now();
+        fetch(url2,{cache:'no-store',mode:'no-cors'}).then(()=>cb(Math.round(performance.now()-t1))).catch(()=>cb(null));
+      });
+    }
+    function pingToSignal(ping){
+      if(ping===null)return 5;if(ping<20)return 99;if(ping<40)return 92;if(ping<70)return 82;
+      if(ping<100)return 70;if(ping<150)return 57;if(ping<250)return 42;if(ping<400)return 25;return 12;
+    }
+    function updateBars(pct){
+      var thresholds=[20,40,60,80,100],heights=[10,20,32,44,56];
+      var color=pct>=75?'#22c55e':pct>=45?'#f59e0b':'#ff0d0d';
+      for(var i=1;i<=5;i++){var el=document.getElementById('b'+i);el.style.height=heights[i-1]+'px';el.style.background=pct>=thresholds[i-1]?color:'#150000';}
+    }
+    function drawChart(history){
+      var W=canvas.offsetWidth||600;canvas.width=W;canvas.height=90;
+      ctx.clearRect(0,0,W,90);if(history.length<2)return;
+      var step=W/(history.length-1),max=Math.max(...history,1);
+      ctx.strokeStyle='rgba(42,0,0,0.6)';ctx.lineWidth=0.5;ctx.setLineDash([3,3]);
+      [25,50,75].forEach(function(pct){var y=90-(pct/100)*80-5;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();});
+      ctx.setLineDash([]);
+      ctx.beginPath();history.forEach(function(v,i){var x=i*step,y=90-((v/max)*80)-5;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+      ctx.lineTo((history.length-1)*step,90);ctx.lineTo(0,90);ctx.closePath();ctx.fillStyle='rgba(255,13,13,0.07)';ctx.fill();
+      for(var i=1;i<history.length;i++){
+        var x0=(i-1)*step,y0=90-((history[i-1]/max)*80)-5,x1=i*step,y1=90-((history[i]/max)*80)-5,pct=history[i];
+        ctx.strokeStyle=pct>=75?'#22c55e':pct>=45?'#f59e0b':'#ff0d0d';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();
+      }
+      var lx=(history.length-1)*step,ly=90-((history[history.length-1]/max)*80)-5;
+      ctx.fillStyle=history[history.length-1]>=75?'#22c55e':history[history.length-1]>=45?'#f59e0b':'#ff0d0d';
+      ctx.beginPath();ctx.arc(lx,ly,3,0,Math.PI*2);ctx.fill();
+    }
+    function updateAlert(ping,sig){
+      var alertEl=document.getElementById('wifi-alert'),icon=document.getElementById('al-icon'),title=document.getElementById('al-title'),desc=document.getElementById('al-desc');
+      alertEl.classList.remove('good','warn','bad','visible');
+      if(ping===null||sig<15){alertEl.classList.add('visible','bad');icon.textContent='✖';title.textContent='Connection Lost / Critical';desc.textContent='Cannot reach servers. Your internet may be down.';}
+      else if(sig<40||ping>350){alertEl.classList.add('visible','bad');icon.textContent='▼ DROP';title.textContent='Severe Signal Drop Detected';desc.textContent='Ping: '+ping+'ms — Very high latency. Possible attack or severe congestion.';}
+      else if(sig<60||ping>150){alertEl.classList.add('visible','warn');icon.textContent='◈ WEAK';title.textContent='Weak Signal — Degraded';desc.textContent='Ping: '+ping+'ms — Connection is below normal. Expect lag.';}
+      else if(sig>=85&&ping<50){alertEl.classList.add('visible','good');icon.textContent='▲ STRONG';title.textContent='Strong Signal — Stable';desc.textContent='Ping: '+ping+'ms — Connection is performing well.';}
+    }
+    function tick(){
+      measurePing(function(ping){
+        var sig=pingToSignal(ping);
+        var label=sig>=85?'EXCELLENT':sig>=70?'GOOD':sig>=45?'WEAK':sig>=20?'POOR':'CRITICAL';
+        var color=sig>=70?'#22c55e':sig>=45?'#f59e0b':'#ff0d0d';
+        document.getElementById('sig-num').textContent=sig+'%';
+        document.getElementById('sig-num').style.color=color;
+        document.getElementById('sig-lbl').textContent=label;
+        updateBars(sig);
+        var jitter=0;
+        if(pingHistory.length>0&&ping!==null)jitter=Math.abs(ping-(pingHistory[pingHistory.length-1]||ping));
+        if(ping!==null)pingHistory.push(ping);if(pingHistory.length>20)pingHistory.shift();
+        var dl=conn?conn.downlink||0:0,ul=conn?conn.uplink||0:0;
+        document.getElementById('dl-spd').textContent=dl>0?dl.toFixed(1):'—';
+        document.getElementById('ul-spd').textContent=ul>0?ul.toFixed(1):'—';
+        function setM(id,val,cls){var el=document.getElementById(id);el.textContent=val;el.className='metric-val '+(cls||'');}
+        setM('m-ping',ping!==null?ping+'ms':'—',ping===null?'bad':ping>300?'bad':ping>100?'warn':'good');
+        setM('m-jitter',jitter+'ms',jitter>60?'bad':jitter>25?'warn':'good');
+        var loss=ping===null?'High':ping>400?'~10%':ping>250?'~3%':'~0%';
+        setM('m-loss',loss,ping===null||ping>400?'bad':ping>250?'warn':'good');
+        setM('m-type',conn&&conn.type?conn.type:'—','');
+        setM('m-eff',conn&&conn.effectiveType?conn.effectiveType:'—','');
+        chartHistory.push(sig);if(chartHistory.length>40)chartHistory.shift();
+        drawChart(chartHistory);updateAlert(ping,sig);
+      });
+    }
+    startBtn.addEventListener('click',function(){
+      dashboard.style.display='block';hint.textContent='[ Scanning every 2 seconds ]';
+      startBtn.disabled=true;stopBtn.disabled=false;tick();scanInterval=setInterval(tick,2000);
+    });
+    stopBtn.addEventListener('click',function(){
+      clearInterval(scanInterval);scanInterval=null;startBtn.disabled=false;stopBtn.disabled=true;
+      hint.textContent='[ Stopped — press Start to resume ]';
+    });
+    window.addEventListener('resize',function(){if(chartHistory.length>1)drawChart(chartHistory);});
+  })();
+})();
+</script>
+</body>
+</html>
